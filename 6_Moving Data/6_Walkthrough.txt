@@ -1,0 +1,271 @@
+Assembly Primer For Hackers (Part 6) Moving Data
+
+1.) Compile and link the program
+kan1shka9@dev:~/Desktop/PAL/5$ ls
+MovDemo.s
+kan1shka9@dev:~/Desktop/PAL/5$ as -gstabs -o MovDemo.o MovDemo.s
+kan1shka9@dev:~/Desktop/PAL/5$ ls
+MovDemo.o  MovDemo.s
+-rw-rw-r-- 1 kan1shka9 1392 Jul  7 11:05 MovDemo.o
+kan1shka9@dev:~/Desktop/PAL/5$ ld -o MovDemo MovDemo.o
+kan1shka9@dev:~/Desktop/PAL/5$ ls
+MovDemo  MovDemo.o  MovDemo.s
+kan1shka9@dev:~/Desktop/PAL/5$ ./MovDemo
+kan1shka9@dev:~/Desktop/PAL/5$ ./MovDemo
+kan1shka9@dev:~/Desktop/PAL/5$
+
+2.) Run it in GDB
+kan1shka9@dev:~/Desktop/PAL/5$ gdb ./MovDemo
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./MovDemo...done.
+(gdb) l
+1       # Demo program to show how to use Data types and MOVx instructions
+2
+3       .data
+4
+5               HelloWorld:
+6                       .ascii "Hello World!"
+7
+8               ByteLocation:
+9                       .byte 10
+10
+(gdb)
+11              Int32:
+12                      .int 2
+13              Int16:
+14                      .short 3
+15              Float:
+16                      .float 10.23
+17
+18              IntegerArray:
+19                      .int 10,20,30,40,50
+20
+(gdb)
+21
+22      .bss
+23              .comm LargeBuffer, 10000
+24
+25      .text
+26
+27              .globl _start
+28
+29              _start:
+30
+(gdb)
+31                      nop
+32
+33                      # 1. MOV immediate value into register
+34
+35                      movl $10, %eax
+36
+37                      # 2. MOV immediate value into memory location
+38
+39                      movw $50, Int16
+40
+(gdb) break *_start+1
+Breakpoint 1 at 0x8048075: file MovDemo.s, line 35.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/5/MovDemo
+
+Breakpoint 1, _start () at MovDemo.s:35
+35                      movl $10, %eax
+
+---> # 1. MOV immediate value into register
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x8048075        0x8048075 <_start+1>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+39                      movw $50, Int16
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807a        0x804807a <_start+6>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+
+---> # 2. MOV immediate value into memory location
+(gdb) x/1dh &Int16
+0x80490d0:      3
+(gdb) s
+43                      movl %eax, %ebx
+(gdb) x/1dh &Int16
+0x80490d0:      50
+
+---> # 3. MOV data between registers
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x8048083        0x8048083 <_start+15>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+48                      movl Int32, %eax
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0xa      10
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x8048085        0x8048085 <_start+17>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+
+---> # 4. MOV data from memory to register
+(gdb) x/1dh &Int32
+0x80490cc:      2
+(gdb) s
+52                      movb $3, %al
+(gdb) info registers
+eax            0x2      2
+ecx            0x0      0
+edx            0x0      0
+ebx            0xa      10
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804808a        0x804808a <_start+22>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+
+---> # 5. MOV data from register to memory
+(gdb) s
+53                      movb %al, ByteLocation
+(gdb) x/1db &ByteLocation
+0x80490cb:      10
+(gdb) s
+59                      movl $0, %ecx
+(gdb) x/1db &ByteLocation
+0x80490cb:      3
+
+---> 	# 6. MOV data into an indexed memory location 
+		# Location is decided by BaseAddress(Offset, Index, DataSize)
+		# Offset and Index must be registers, Datasize can be a numerical value
+(gdb) x/5dw &IntegerArray
+0x80490d6:      10      20      30      40
+0x80490e6:      50
+(gdb) s
+60                      movl $2, %edi
+(gdb) s
+61                      movl $22, IntegerArray(%ecx,%edi , 4)
+(gdb) s
+65                      movl $Int32, %eax
+(gdb) x/5dw &IntegerArray
+0x80490d6:      10      20      22      40
+0x80490e6:      50
+
+---> # 7. Indirect addressing using registers
+(gdb) print &Int32
+$1 = (<data variable, no debug info> *) 0x80490cc
+(gdb) s
+66                      movl (%eax), %ebx
+(gdb) info registers
+eax            0x80490cc        134516940
+ecx            0x0      0
+edx            0x0      0
+ebx            0xa      10
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x2      2
+eip            0x80480ab        0x80480ab <_start+55>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) x/1dw &Int32
+0x80490cc:      2
+(gdb) s
+68                      movl $9, (%eax)
+(gdb) info registers
+eax            0x80490cc        134516940
+ecx            0x0      0
+edx            0x0      0
+ebx            0x2      2
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x2      2
+eip            0x80480ad        0x80480ad <_start+57>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+74                      movl $1, %eax
+(gdb) x/1dw &Int32
+0x80490cc:      9
+
+---> Exit Syscall
+(gdb) c
+Continuing.
+[Inferior 1 (process 6092) exited normally]
+(gdb)

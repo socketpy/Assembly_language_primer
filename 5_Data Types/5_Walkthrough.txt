@@ -1,0 +1,145 @@
+Assembly Primer For Hackers (Part 5) Data Types
+
+1.) Compile and link the program
+kan1shka9@dev:~/Desktop/PAL/4$ ls
+VariableDemo.s
+kan1shka9@dev:~/Desktop/PAL/4$ as -gstabs -o VariableDemo.o VariableDemo.s
+kan1shka9@dev:~/Desktop/PAL/4$ ls
+VariableDemo.o  VariableDemo.s
+-rw-rw-r-- 1 kan1shka9 1016 Jul  7 10:05 VariableDemo.o
+kan1shka9@dev:~/Desktop/PAL/4$ ld -o VariableDemo VariableDemo.o
+kan1shka9@dev:~/Desktop/PAL/4$ ls
+VariableDemo  VariableDemo.o  VariableDemo.s
+kan1shka9@dev:~/Desktop/PAL/4$ ./VariableDemo
+kan1shka9@dev:~/Desktop/PAL/4$ ./VariableDemo
+kan1shka9@dev:~/Desktop/PAL/4$
+
+2.) Load the program in GDB
+kan1shka9@dev:~/Desktop/PAL/4$ gdb ./VariableDemo
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./VariableDemo...done.
+(gdb) list
+1       # Demo program to show how to use Data types and MOVx instructions
+2
+3       .data
+4
+5               HelloWorld:
+6                       .ascii "Hello World!"
+7
+8               ByteLocation:
+9                       .byte 10
+10
+(gdb)
+11              Int32:
+12                      .int 2
+13              Int16:
+14                      .short 3
+15              Float:
+16                      .float 10.23
+17
+18              IntegerArray:
+19                      .int 10,20,30,40,50
+20
+(gdb)
+21
+22      .bss
+23              .comm LargeBuffer, 10000
+24
+25      .text
+26
+27              .globl _start
+28
+29              _start:
+30                      nop
+(gdb)
+31                      # Exit syscall to exit the program
+32
+33                      movl $1, %eax
+34                      movl $0, %ebx
+35                      int $0x80
+36
+37
+(gdb)
+Line number 38 out of range; VariableDemo.s has 37 lines.
+(gdb) break *_start+1
+Breakpoint 1 at 0x8048075: file VariableDemo.s, line 33.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/4/VariableDemo
+
+Breakpoint 1, _start () at VariableDemo.s:33
+33                      movl $1, %eax
+(gdb) info variables
+All defined variables:
+
+Non-debugging symbols:
+0x08049081  HelloWorld
+0x0804908d  ByteLocation
+0x0804908e  Int32
+0x08049092  Int16
+0x08049094  Float
+0x08049098  IntegerArray
+0x080490ac  __bss_start
+0x080490ac  _edata
+0x080490b0  LargeBuffer
+0x0804b7c0  _end
+(gdb) help x
+Examine memory: x/FMT ADDRESS.
+ADDRESS is an expression for the memory address to examine.
+FMT is a repeat count followed by a format letter and a size letter.
+Format letters are o(octal), x(hex), d(decimal), u(unsigned decimal),
+  t(binary), f(float), a(address), i(instruction), c(char), s(string)
+  and z(hex, zero padded on the left).
+Size letters are b(byte), h(halfword), w(word), g(giant, 8 bytes).
+The specified number of objects of the specified size are printed
+according to the format.
+
+Defaults for format and size letters are those previously used.
+Default count is 1.  Default address is following last thing printed
+with this command or "print".
+(gdb) x/12cb 0x08049081
+0x8049081:      72 'H'  101 'e' 108 'l' 108 'l' 111 'o' 32 ' '  87 'W'  111 'o'
+0x8049089:      114 'r' 108 'l' 100 'd' 33 '!'
+(gdb) x/12c 0x08049081
+0x8049081:      72 'H'  101 'e' 108 'l' 108 'l' 111 'o' 32 ' '  87 'W'  111 'o'
+0x8049089:      114 'r' 108 'l' 100 'd' 33 '!'
+(gdb) x/1db 0x0804908d
+0x804908d:      10
+(gdb) x/1dw 0x0804908e
+0x804908e:      2
+(gdb) x/1dh 0x08049092
+0x8049092:      3
+(gdb) x/1fw 0x08049094
+0x8049094:      10.2299995
+(gdb) x/5dw 0x08049098
+0x8049098:      10      20      30      40
+0x80490a8:      50
+(gdb) x/10db 0x080490b0
+0x80490b0 <LargeBuffer>:        0       0       0       0       0       0       0       0
+0x80490b8 <LargeBuffer+8>:      0       0
+(gdb) x/100db 0x080490b0
+0x80490b0 <LargeBuffer>:        0       0       0       0       0       0       0       0
+0x80490b8 <LargeBuffer+8>:      0       0       0       0       0       0       0       0
+0x80490c0 <LargeBuffer+16>:     0       0       0       0       0       0       0       0
+0x80490c8 <LargeBuffer+24>:     0       0       0       0       0       0       0       0
+0x80490d0 <LargeBuffer+32>:     0       0       0       0       0       0       0       0
+0x80490d8 <LargeBuffer+40>:     0       0       0       0       0       0       0       0
+0x80490e0 <LargeBuffer+48>:     0       0       0       0       0       0       0       0
+0x80490e8 <LargeBuffer+56>:     0       0       0       0       0       0       0       0
+0x80490f0 <LargeBuffer+64>:     0       0       0       0       0       0       0       0
+0x80490f8 <LargeBuffer+72>:     0       0       0       0       0       0       0       0
+0x8049100 <LargeBuffer+80>:     0       0       0       0       0       0       0       0
+0x8049108 <LargeBuffer+88>:     0       0       0       0       0       0       0       0
+0x8049110 <LargeBuffer+96>:     0       0       0       0

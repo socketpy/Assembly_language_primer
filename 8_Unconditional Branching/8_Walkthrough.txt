@@ -1,0 +1,343 @@
+Assembly Primer for Hackers Part 8 Unconditional Branching
+
+1.) Unconditional branching with JMP to ExitProgram
+kan1shka9@dev:~/Desktop/PAL/7$ cat -n UnconditinalBranching.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!"
+     5
+     6          CallDemo:
+     7                  .asciz "Call works!"
+     8
+     9  .text
+    10
+    11          .globl _start
+    12
+    13          _start:
+    14                  nop
+    15
+    16                  jmp ExitProgram
+    17                  # Write  HelloWorld
+    18
+    19                  movl $4, %eax
+    20                  movl $1, %ebx
+    21                  movl $HelloWorld, %ecx
+    22                  movl $12, %edx
+    23                  int $0x80
+    24
+    25
+    26
+    27
+    28          ExitProgram:
+    29                  # Exit the program
+    30                  movl $1, %eax
+    31                  movl $10, %ebx
+    32                  int $0x80
+    33
+    34          CallMe:
+    35                  movl $4, %eax
+    36                  movl $1, %ebx
+    37                  movl $CallDemo, %ecx
+    38                  movl $11, %edx
+    39                  int $0x80
+    40                  ret
+    41
+kan1shka9@dev:~/Desktop/PAL/7$
+
+2.) Assemble and Link the program
+kan1shka9@dev:~/Desktop/PAL/7$ as -gstabs UnconditinalBranching.s -o UnconditinalBranching.o
+kan1shka9@dev:~/Desktop/PAL/7$ ls
+UnconditinalBranching.o  UnconditinalBranching.s
+kan1shka9@dev:~/Desktop/PAL/7$ ld -o UnconditinalBranching UnconditinalBranching.o
+kan1shka9@dev:~/Desktop/PAL/7$ ls
+UnconditinalBranching  UnconditinalBranching.o  UnconditinalBranching.s
+kan1shka9@dev:~/Desktop/PAL/7$ ./UnconditinalBranching
+kan1shka9@dev:~/Desktop/PAL/7$ ./UnconditinalBranching
+kan1shka9@dev:~/Desktop/PAL/7$
+
+3.) Finding out the return status code
+kan1shka9@dev:~/Desktop/PAL/7$ echo $?
+10
+
+4.) Run it in GDB
+kan1shka9@dev:~/Desktop/PAL/7$ gdb ./UnconditinalBranching
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./UnconditinalBranching...done.
+(gdb) disassemble _start
+Dump of assembler code for function _start:
+   0x08048074 <+0>:     nop
+   0x08048075 <+1>:     jmp    0x804808d <ExitProgram>
+   0x08048077 <+3>:     mov    $0x4,%eax
+   0x0804807c <+8>:     mov    $0x1,%ebx
+   0x08048081 <+13>:    mov    $0x80490b0,%ecx
+   0x08048086 <+18>:    mov    $0xc,%edx
+   0x0804808b <+23>:    int    $0x80
+End of assembler dump.
+(gdb) disassemble ExitProgram
+Dump of assembler code for function ExitProgram:
+   0x0804808d <+0>:     mov    $0x1,%eax
+   0x08048092 <+5>:     mov    $0xa,%ebx
+   0x08048097 <+10>:    int    $0x80
+End of assembler dump.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!"
+5
+6               CallDemo:
+7                       .asciz "Call works!"
+8
+9       .text
+10
+(gdb) l
+11              .globl _start
+12
+13              _start:
+14                      nop
+15
+16                      jmp ExitProgram
+17                      # Write  HelloWorld
+18
+19                      movl $4, %eax
+20                      movl $1, %ebx
+(gdb) l
+21                      movl $HelloWorld, %ecx
+22                      movl $12, %edx
+23                      int $0x80
+24
+25
+26
+27
+28              ExitProgram:
+29                      # Exit the program
+30                      movl $1, %eax
+(gdb)
+31                      movl $10, %ebx
+32                      int $0x80
+33
+34              CallMe:
+35                      movl $4, %eax
+36                      movl $1, %ebx
+37                      movl $CallDemo, %ecx
+38                      movl $11, %edx
+39                      int $0x80
+40                      ret
+(gdb) break *_start+1
+Breakpoint 1 at 0x8048075: file UnconditinalBranching.s, line 16.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/7/UnconditinalBranching
+
+Breakpoint 1, _start () at UnconditinalBranching.s:16
+16                      jmp ExitProgram
+(gdb) print $eip
+$1 = (void (*)()) 0x8048075 <_start+1>
+(gdb) disassemble _start+1
+Dump of assembler code for function _start:
+   0x08048074 <+0>:     nop
+=> 0x08048075 <+1>:     jmp    0x804808d <ExitProgram>
+   0x08048077 <+3>:     mov    $0x4,%eax
+   0x0804807c <+8>:     mov    $0x1,%ebx
+   0x08048081 <+13>:    mov    $0x80490b0,%ecx
+   0x08048086 <+18>:    mov    $0xc,%edx
+   0x0804808b <+23>:    int    $0x80
+End of assembler dump.
+(gdb) s
+30                      movl $1, %eax
+(gdb) print $eip
+$2 = (void (*)()) 0x804808d <ExitProgram>
+(gdb) disassemble ExitProgram
+Dump of assembler code for function ExitProgram:
+=> 0x0804808d <+0>:     mov    $0x1,%eax
+   0x08048092 <+5>:     mov    $0xa,%ebx
+   0x08048097 <+10>:    int    $0x80
+End of assembler dump.
+(gdb)
+
+5.) Unconditional branching with Call to ExitProgram
+kan1shka9@dev:~/Desktop/PAL/7$ cat -n UnconditinalBranching.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!"
+     5
+     6          CallDemo:
+     7                  .asciz "Call works!"
+     8
+     9  .text
+    10
+    11          .globl _start
+    12
+    13          _start:
+    14                  nop
+    15
+    16                  call CallMe
+    17                  # Write  HelloWorld
+    18
+    19                  movl $4, %eax
+    20                  movl $1, %ebx
+    21                  movl $HelloWorld, %ecx
+    22                  movl $12, %edx
+    23                  int $0x80
+    24
+    25
+    26
+    27
+    28          ExitProgram:
+    29                  # Exit the program
+    30                  movl $1, %eax
+    31                  movl $10, %ebx
+    32                  int $0x80
+    33
+    34          CallMe:
+    35                  movl $4, %eax
+    36                  movl $1, %ebx
+    37                  movl $CallDemo, %ecx
+    38                  movl $11, %edx
+    39                  int $0x80
+    40                  ret
+    41
+kan1shka9@dev:~/Desktop/PAL/7$
+
+6.) Assemble and Link the program
+kan1shka9@dev:~/Desktop/PAL/7$ as -gstabs UnconditinalBranching.s -o UnconditinalBranching.o
+kan1shka9@dev:~/Desktop/PAL/7$ ls
+UnconditinalBranching.o  UnconditinalBranching.s
+kan1shka9@dev:~/Desktop/PAL/7$ ld -o UnconditinalBranching UnconditinalBranching.o
+kan1shka9@dev:~/Desktop/PAL/7$ ls
+UnconditinalBranching  UnconditinalBranching.o  UnconditinalBranching.s
+kan1shka9@dev:~/Desktop/PAL/7$ ./UnconditinalBranching
+Call works!Hello World!kan1shka9@dev:~/Desktop/PAL/7$
+
+7.) Run it in GDB
+kan1shka9@dev:~/Desktop/PAL/7$ gdb ./UnconditinalBranching
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./UnconditinalBranching...done.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!"
+5
+6               CallDemo:
+7                       .asciz "Call works!"
+8
+9       .text
+10
+(gdb)
+11              .globl _start
+12
+13              _start:
+14                      nop
+15
+16                      call CallMe
+17                      # Write  HelloWorld
+18
+19                      movl $4, %eax
+20                      movl $1, %ebx
+(gdb)
+21                      movl $HelloWorld, %ecx
+22                      movl $12, %edx
+23                      int $0x80
+24
+25
+26
+27
+28              ExitProgram:
+29                      # Exit the program
+30                      movl $1, %eax
+(gdb) break 16
+Breakpoint 1 at 0x8048075: file UnconditinalBranching.s, line 16.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/7/UnconditinalBranching
+
+Breakpoint 1, _start () at UnconditinalBranching.s:16
+16                      call CallMe
+(gdb) disassemble _start
+Dump of assembler code for function _start:
+   0x08048074 <+0>:     nop
+=> 0x08048075 <+1>:     call   0x804809c <CallMe>
+   0x0804807a <+6>:     mov    $0x4,%eax
+   0x0804807f <+11>:    mov    $0x1,%ebx
+   0x08048084 <+16>:    mov    $0x80490b3,%ecx
+   0x08048089 <+21>:    mov    $0xc,%edx
+   0x0804808e <+26>:    int    $0x80
+End of assembler dump.
+(gdb) disassemble _start+1
+Dump of assembler code for function _start:
+   0x08048074 <+0>:     nop
+=> 0x08048075 <+1>:     call   0x804809c <CallMe>
+   0x0804807a <+6>:     mov    $0x4,%eax
+   0x0804807f <+11>:    mov    $0x1,%ebx
+   0x08048084 <+16>:    mov    $0x80490b3,%ecx
+   0x08048089 <+21>:    mov    $0xc,%edx
+   0x0804808e <+26>:    int    $0x80
+End of assembler dump.
+(gdb) disassemble CallMe
+Dump of assembler code for function CallMe:
+   0x0804809c <+0>:     mov    $0x4,%eax
+   0x080480a1 <+5>:     mov    $0x1,%ebx
+   0x080480a6 <+10>:    mov    $0x80490c0,%ecx
+   0x080480ab <+15>:    mov    $0xb,%edx
+   0x080480b0 <+20>:    int    $0x80
+   0x080480b2 <+22>:    ret
+End of assembler dump.
+(gdb) print /x $esp
+$1 = 0xbffff710
+(gdb) print /x $esi
+$2 = 0x0
+(gdb) print /x $eip
+$3 = 0x8048075
+(gdb) s
+35                      movl $4, %eax
+(gdb) print /x $eip
+$4 = 0x804809c
+(gdb) print /x $esi
+$5 = 0x0
+(gdb) print /x $esp
+$6 = 0xbffff70c
+(gdb) s
+36                      movl $1, %ebx
+(gdb) s
+37                      movl $CallDemo, %ecx
+(gdb) s
+38                      movl $11, %edx
+(gdb) s
+39                      int $0x80
+(gdb) s
+Call works!CallMe () at UnconditinalBranching.s:40
+40                      ret
+(gdb) s
+_start () at UnconditinalBranching.s:19
+19                      movl $4, %eax
+(gdb) c
+Continuing.
+Hello World![Inferior 1 (process 4069) exited with code 012]
+(gdb)

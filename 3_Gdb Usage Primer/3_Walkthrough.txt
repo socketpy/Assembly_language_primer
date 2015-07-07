@@ -1,0 +1,270 @@
+Assembly Primer For Hackers (Part 3) Gdb Usage Primer
+
+1.) Run the program in GDB
+kan1shka9@dev:~/Desktop/PAL/2$ gdb ./SimpleDemo
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./SimpleDemo...done.
+(gdb) list 1
+1       #include<stdio.h>
+2       #include<stdlib.h>
+3
+4       int add(int x, int y)
+5       {
+6               int z =10;
+7
+8               z = x + y;
+9               return z;
+10      }
+(gdb)
+11
+12      main(int argc, char **argv)
+13      {
+14              int a = atoi(argv[1]);
+15              int b = atoi(argv[2]);
+16              int c;
+17              char buffer[100];
+18
+19              gets(buffer);
+20              puts(buffer);
+(gdb)
+21
+22              c = add(a,b);
+23
+24              printf("Sum of %d+%d = %d\n",a, b, c);
+25
+26              exit(0);
+27
+28      }
+(gdb) run 10 20
+Starting program: /home/kan1shka9/Desktop/PAL/2/SimpleDemo 10 20
+demo
+demo
+Sum of 10+20 = 30
+[Inferior 1 (process 4713) exited normally]
+(gdb) disassemble main
+Dump of assembler code for function main:
+   0x080484fa <+0>:     push   %ebp
+   0x080484fb <+1>:     mov    %esp,%ebp
+   0x080484fd <+3>:     and    $0xfffffff0,%esp
+   0x08048500 <+6>:     sub    $0xa0,%esp
+   0x08048506 <+12>:    mov    0xc(%ebp),%eax
+   0x08048509 <+15>:    mov    %eax,0x1c(%esp)
+   0x0804850d <+19>:    mov    %gs:0x14,%eax
+   0x08048513 <+25>:    mov    %eax,0x9c(%esp)
+   0x0804851a <+32>:    xor    %eax,%eax
+   0x0804851c <+34>:    mov    0x1c(%esp),%eax
+   0x08048520 <+38>:    add    $0x4,%eax
+   0x08048523 <+41>:    mov    (%eax),%eax
+   0x08048525 <+43>:    mov    %eax,(%esp)
+   0x08048528 <+46>:    call   0x80483d0 <atoi@plt>
+   0x0804852d <+51>:    mov    %eax,0x2c(%esp)
+   0x08048531 <+55>:    mov    0x1c(%esp),%eax
+   0x08048535 <+59>:    add    $0x8,%eax
+   0x08048538 <+62>:    mov    (%eax),%eax
+   0x0804853a <+64>:    mov    %eax,(%esp)
+   0x0804853d <+67>:    call   0x80483d0 <atoi@plt>
+   0x08048542 <+72>:    mov    %eax,0x30(%esp)
+   0x08048546 <+76>:    lea    0x38(%esp),%eax
+   0x0804854a <+80>:    mov    %eax,(%esp)
+   0x0804854d <+83>:    call   0x8048380 <gets@plt>
+   0x08048552 <+88>:    lea    0x38(%esp),%eax
+   0x08048556 <+92>:    mov    %eax,(%esp)
+   0x08048559 <+95>:    call   0x8048390 <puts@plt>
+   0x0804855e <+100>:   mov    0x30(%esp),%eax
+   0x08048562 <+104>:   mov    %eax,0x4(%esp)
+   0x08048566 <+108>:   mov    0x2c(%esp),%eax
+   0x0804856a <+112>:   mov    %eax,(%esp)
+   0x0804856d <+115>:   call   0x80484dd <add>
+   0x08048572 <+120>:   mov    %eax,0x34(%esp)
+   0x08048576 <+124>:   mov    0x34(%esp),%eax
+   0x0804857a <+128>:   mov    %eax,0xc(%esp)
+   0x0804857e <+132>:   mov    0x30(%esp),%eax
+   0x08048582 <+136>:   mov    %eax,0x8(%esp)
+   0x08048586 <+140>:   mov    0x2c(%esp),%eax
+   0x0804858a <+144>:   mov    %eax,0x4(%esp)
+   0x0804858e <+148>:   movl   $0x8048640,(%esp)
+   0x08048595 <+155>:   call   0x8048370 <printf@plt>
+   0x0804859a <+160>:   movl   $0x0,(%esp)
+   0x080485a1 <+167>:   call   0x80483b0 <exit@plt>
+End of assembler dump.
+(gdb) disassemble add
+Dump of assembler code for function add:
+   0x080484dd <+0>:     push   %ebp
+   0x080484de <+1>:     mov    %esp,%ebp
+   0x080484e0 <+3>:     sub    $0x10,%esp
+   0x080484e3 <+6>:     movl   $0xa,-0x4(%ebp)
+   0x080484ea <+13>:    mov    0xc(%ebp),%eax
+   0x080484ed <+16>:    mov    0x8(%ebp),%edx
+   0x080484f0 <+19>:    add    %edx,%eax
+   0x080484f2 <+21>:    mov    %eax,-0x4(%ebp)
+   0x080484f5 <+24>:    mov    -0x4(%ebp),%eax
+   0x080484f8 <+27>:    leave
+   0x080484f9 <+28>:    ret
+End of assembler dump.
+(gdb) list 1
+1       #include<stdio.h>
+2       #include<stdlib.h>
+3
+4       int add(int x, int y)
+5       {
+6               int z =10;
+7
+8               z = x + y;
+9               return z;
+10      }
+(gdb)
+11
+12      main(int argc, char **argv)
+13      {
+14              int a = atoi(argv[1]);
+15              int b = atoi(argv[2]);
+16              int c;
+17              char buffer[100];
+18
+19              gets(buffer);
+20              puts(buffer);
+(gdb) break 8
+Breakpoint 1 at 0x80484ea: file SimpleDemo.c, line 8.
+(gdb) help break
+Set breakpoint at specified line or function.
+break [PROBE_MODIFIER] [LOCATION] [thread THREADNUM] [if CONDITION]
+PROBE_MODIFIER shall be present if the command is to be placed in a
+probe point.  Accepted values are `-probe' (for a generic, automatically
+guessed probe type) or `-probe-stap' (for a SystemTap probe).
+LOCATION may be a line number, function name, or "*" and an address.
+If a line number is specified, break at start of code for that line.
+If a function is specified, break at start of code for that function.
+If an address is specified, break at that exact address.
+With no LOCATION, uses current execution address of the selected
+stack frame.  This is useful for breaking on return to a stack frame.
+
+THREADNUM is the number from "info threads".
+CONDITION is a boolean expression.
+
+Multiple breakpoints at one place are permitted, and useful if their
+conditions are different.
+
+Do "help breakpoints" for info on other commands dealing with breakpoints.
+(gdb) list 8
+3
+4       int add(int x, int y)
+5       {
+6               int z =10;
+7
+8               z = x + y;
+9               return z;
+10      }
+11
+12      main(int argc, char **argv)
+(gdb) run 10 20
+Starting program: /home/kan1shka9/Desktop/PAL/2/SimpleDemo 10 20
+as
+as
+
+Breakpoint 1, add (x=10, y=20) at SimpleDemo.c:8
+8               z = x + y;
+(gdb) print x
+$1 = 10
+(gdb) print y
+$2 = 20
+(gdb) info registers
+eax            0xa      10
+ecx            0xb7fd7000       -1208127488
+edx            0xb7fc0898       -1208219496
+ebx            0xb7fbf000       -1208225792
+esp            0xbffff5c8       0xbffff5c8
+ebp            0xbffff5d8       0xbffff5d8
+esi            0x0      0
+edi            0x0      0
+eip            0x80484ea        0x80484ea <add+13>
+eflags         0x282    [ SF IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x33     51
+(gdb) help x
+Examine memory: x/FMT ADDRESS.
+ADDRESS is an expression for the memory address to examine.
+FMT is a repeat count followed by a format letter and a size letter.
+Format letters are o(octal), x(hex), d(decimal), u(unsigned decimal),
+  t(binary), f(float), a(address), i(instruction), c(char), s(string)
+  and z(hex, zero padded on the left).
+Size letters are b(byte), h(halfword), w(word), g(giant, 8 bytes).
+The specified number of objects of the specified size are printed
+according to the format.
+
+Defaults for format and size letters are those previously used.
+Default count is 1.  Default address is following last thing printed
+with this command or "print".
+(gdb) x/10xb 0xbffff5c8
+0xbffff5c8:     0xa4    0x08    0xfc    0xb7    0x00    0xf0    0xfb    0xb7
+0xbffff5d0:     0x00    0x00
+(gdb) x/10bx 0xbffff5c8
+0xbffff5c8:     0xa4    0x08    0xfc    0xb7    0x00    0xf0    0xfb    0xb7
+0xbffff5d0:     0x00    0x00
+(gdb) x/10xw 0xbffff5c8
+0xbffff5c8:     0xb7fc08a4      0xb7fbf000      0x00000000      0x0000000a
+0xbffff5d8:     0xbffff688      0x08048572      0x0000000a      0x00000014
+0xbffff5e8:     0x00000001      0xb7fff938
+(gdb)
+0x08048572 -> Return address
+0x0000000a -> First argument  -> 10 in hex -> a
+0x00000014 -> Second argument -> 20 in hex -> 14
+(gdb) s
+9               return z;
+(gdb) list 9
+4       int add(int x, int y)
+5       {
+6               int z =10;
+7
+8               z = x + y;
+9               return z;
+10      }
+11
+12      main(int argc, char **argv)
+13      {
+(gdb) s
+10      }
+(gdb) s
+main (argc=3, argv=0xbffff724) at SimpleDemo.c:24
+24              printf("Sum of %d+%d = %d\n",a, b, c);
+(gdb) s
+__printf (format=0x8048640 "Sum of %d+%d = %d\n") at printf.c:28
+28      printf.c: No such file or directory.
+(gdb) s
+__x86.get_pc_thunk.bx () at ../sysdeps/i386/i686/multiarch/strcat.S:55
+55      ../sysdeps/i386/i686/multiarch/strcat.S: No such file or directory.
+(gdb) s
+__printf (format=0x8048640 "Sum of %d+%d = %d\n") at printf.c:32
+32      printf.c: No such file or directory.
+(gdb) s
+33      in printf.c
+(gdb) run 10 20
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+Starting program: /home/kan1shka9/Desktop/PAL/2/SimpleDemo 10 20
+as
+as
+
+Breakpoint 1, add (x=10, y=20) at SimpleDemo.c:8
+8               z = x + y;
+(gdb) c
+Continuing.
+Sum of 10+20 = 30
+[Inferior 1 (process 4786) exited normally]
+(gdb)

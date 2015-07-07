@@ -1,0 +1,229 @@
+Assembly Primer For Hackers (Part 2) Virtual Memory Organization
+
+1.) Compile and run the program
+kan1shka9@dev:~/Desktop/PAL/2$ gcc -ggdb SimpleDemo.c -o SimpleDemo
+SimpleDemo.c: In function ‘main’:
+SimpleDemo.c:19:9: warning: ‘gets’ is deprecated (declared at /usr/include/stdio.h:638) [-Wdeprecated-declarations]
+         gets(buffer);
+         ^
+/tmp/ccPRcnQM.o: In function `main':
+/home/kan1shka9/Desktop/PAL/2/SimpleDemo.c:19: warning: the `gets' function is dangerous and should not be used.
+kan1shka9@dev:~/Desktop/PAL/2$ ls
+SimpleDemo  SimpleDemo.c
+kan1shka9@dev:~/Desktop/PAL/2$ ./SimpleDemo 10 20
+demo
+demo
+Sum of 10+20 = 30
+
+2.) Looking into its memory organization
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ ls
+SimpleDemo  SimpleDemo.c
+kan1shka9@dev:~/Desktop/PAL/2$ ./SimpleDemo 10 20
+Terminal 2
+kan1shka9@dev:~$ ps -aux | grep SimpleDemo
+kan1shk+  4473  0.0  0.0   2036   568 pts/6    S+   07:41   0:00 ./SimpleDemo 10 20
+kan1shk+  4482  0.0  0.0   4688  2024 pts/16   S+   07:41   0:00 grep --color=auto SimpleDemo
+kan1shka9@dev:~$ cd /proc/
+kan1shka9@dev:/proc$ ls
+1     126   134   1413  15   160   168   1757  1824  1872  2065  215   2433  2804  30    3820  4473  536  72   992        diskstats    kcore       mounts        stat               vmstat
+10    127   135   142   150  161   1687  176   1827  1884  2068  2170  2442  2822  3027  4100  45    543  73   995        dma          keys        mpt           swaps              zoneinfo
+1037  128   136   1421  151  1616  169   177   183   19    2071  22    2448  2863  31    4159  4500  544  755  acpi       driver       key-users   mtrr          sys
+1046  129   1368  1424  152  162   17    1771  1831  1905  2075  2241  25    2876  3358  4160  46    549  780  asound     execdomains  kmsg        net           sysrq-trigger
+1062  1298  137   143   153  163   170   178   1836  1914  2079  228   2525  29    3362  4215  464   579  790  buddyinfo  fb           kpagecount  pagetypeinfo  sysvipc
+1063  13    138   1436  154  164   171   179   1838  1923  2089  229   2664  2906  3363  43    47    583  8    bus        filesystems  kpageflags  partitions    timer_list
+1071  130   139   144   155  1645  172   1795  184   2     2091  23    2683  2911  3364  4339  48    584  868  cgroups    fs           loadavg     sched_debug   timer_stats
+1082  1304  1393  145   156  165   173   18    1849  20    21    2315  27    2917  3403  4387  5     595  880  cmdline    interrupts   locks       schedstat     tty
+11    1307  1395  146   157  1658  174   180   185   2008  211   2350  2734  2924  367   4398  51    601  9    consoles   iomem        mdstat      scsi          uptime
+1193  131   14    147   158  166   175   181   186   2053  2125  24    2766  2935  371   4399  513   606  977  cpuinfo    ioports      meminfo     self          version
+12    132   140   148   159  167   1753  1815  1867  2060  2137  2424  2782  2969  3774  44    517   62   983  crypto     irq          misc        slabinfo      version_signature
+125   133   141   149   16   1672  1755  182   187   2062  214   2430  2787  3     3819  4403  526   7    990  devices    kallsyms     modules     softirqs      vmallocinfo
+kan1shka9@dev:/proc$ cd 4473
+kan1shka9@dev:/proc/4473$ ls
+attr       cgroup      comm             cwd      fd       io        map_files  mountinfo   net      oom_score      personality  sched      smaps  statm    task     wchan
+autogroup  clear_refs  coredump_filter  environ  fdinfo   limits    maps       mounts      ns       oom_score_adj  projid_map   schedstat  stack  status   timers
+auxv       cmdline     cpuset           exe      gid_map  loginuid  mem        mountstats  oom_adj  pagemap        root         sessionid  stat   syscall  uid_map
+kan1shka9@dev:/proc/4473$ ls | grep maps
+maps
+smaps
+kan1shka9@dev:/proc/4473$ cat maps 
+08048000-08049000 r-xp 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+08049000-0804a000 r--p 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+0804a000-0804b000 rw-p 00001000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+b75ff000-b7600000 rw-p 00000000 00:00 0 
+b7600000-b77a9000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77a9000-b77ab000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77ab000-b77ac000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77ac000-b77af000 rw-p 00000000 00:00 0 
+b77c4000-b77c7000 rw-p 00000000 00:00 0 
+b77c7000-b77c8000 r-xp 00000000 00:00 0          [vdso]
+b77c8000-b77ca000 r--p 00000000 00:00 0          [vvar]
+b77ca000-b77ea000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b77ea000-b77eb000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b77eb000-b77ec000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bfd9a000-bfdbb000 rw-p 00000000 00:00 0          [stack]
+
+3.) Run it again
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ ./SimpleDemo 10 20
+Terminal 2
+kan1shka9@dev:/proc/4473$ ps -aux | grep SimpleDemo
+kan1shk+  4549  0.0  0.0   2036   572 pts/6    S+   07:49   0:00 ./SimpleDemo 10 20
+kan1shk+  4552  0.0  0.0   4688  2080 pts/16   S+   07:49   0:00 grep --color=auto SimpleDemo
+kan1shka9@dev:~$ cat /proc/4549/maps
+08048000-08049000 r-xp 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+08049000-0804a000 r--p 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+0804a000-0804b000 rw-p 00001000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+b75fc000-b75fd000 rw-p 00000000 00:00 0 
+b75fd000-b77a6000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77a6000-b77a8000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77a8000-b77a9000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b77a9000-b77ac000 rw-p 00000000 00:00 0 
+b77c1000-b77c4000 rw-p 00000000 00:00 0 
+b77c4000-b77c5000 r-xp 00000000 00:00 0          [vdso]
+b77c5000-b77c7000 r--p 00000000 00:00 0          [vvar]
+b77c7000-b77e7000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b77e7000-b77e8000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b77e8000-b77e9000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bf9e1000-bfa02000 rw-p 00000000 00:00 0          [stack]
+All sections have been rearranged apart from the text section.
+As it is running on Linux 2.6 kernel and above
+kan1shka9@dev:~/Desktop/PAL/2$ uname -a
+Linux dev 3.16.0-30-generic #40~14.04.1-Ubuntu SMP Thu Jan 15 17:45:15 UTC 2015 i686 i686 i686 GNU/Linux
+Overflow attack mitigation -> Virtual address randomization
+This means stack will randomized every time you run it.
+
+4.) Disable ASLR
+kan1shka9@dev:~/Desktop/PAL/2$ cat /proc/sys/kernel/randomize_va_space
+2
+kan1shka9@dev:~/Desktop/PAL/2$ sudo nano /proc/sys/kernel/randomize_va_space
+[sudo] password for kan1shka9:
+kan1shka9@dev:~/Desktop/PAL/2$ cat /proc/sys/kernel/randomize_va_space
+0
+
+5.) Verify if it actually disabled
+-> Run 1
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ ./SimpleDemo 10 20
+Terminal 2
+kan1shka9@dev:~$ ps -aux | grep SimpleDemo
+kan1shk+  4633  0.0  0.0   2036   552 pts/6    S+   07:59   0:00 ./SimpleDemo 10 20
+kan1shk+  4638  0.0  0.0   4688  2080 pts/16   S+   07:59   0:00 grep --color=auto SimpleDemo
+kan1shka9@dev:~$ cat /proc/4633/maps 
+08048000-08049000 r-xp 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+08049000-0804a000 r--p 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+0804a000-0804b000 rw-p 00001000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+b7e13000-b7e14000 rw-p 00000000 00:00 0 
+b7e14000-b7fbd000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbd000-b7fbf000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbf000-b7fc0000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fc0000-b7fc3000 rw-p 00000000 00:00 0 
+b7fd8000-b7fdb000 rw-p 00000000 00:00 0 
+b7fdb000-b7fdc000 r-xp 00000000 00:00 0          [vdso]
+b7fdc000-b7fde000 r--p 00000000 00:00 0          [vvar]
+b7fde000-b7ffe000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7ffe000-b7fff000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7fff000-b8000000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bffdf000-c0000000 rw-p 00000000 00:00 0          [stack]
+-> Run 2
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ ./SimpleDemo 10 20
+Terminal 2
+kan1shka9@dev:~$ ps -aux | grep SimpleDemo
+kan1shk+  4650  0.0  0.0   2036   552 pts/6    S+   08:01   0:00 ./SimpleDemo 10 20
+kan1shk+  4652  0.0  0.0   4688  2080 pts/16   S+   08:01   0:00 grep --color=auto SimpleDemo
+kan1shka9@dev:~$ cat /proc/4650/maps 
+08048000-08049000 r-xp 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+08049000-0804a000 r--p 00000000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+0804a000-0804b000 rw-p 00001000 08:01 1711559    /home/kan1shka9/Desktop/PAL/2/SimpleDemo
+b7e13000-b7e14000 rw-p 00000000 00:00 0 
+b7e14000-b7fbd000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbd000-b7fbf000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbf000-b7fc0000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fc0000-b7fc3000 rw-p 00000000 00:00 0 
+b7fd8000-b7fdb000 rw-p 00000000 00:00 0 
+b7fdb000-b7fdc000 r-xp 00000000 00:00 0          [vdso]
+b7fdc000-b7fde000 r--p 00000000 00:00 0          [vvar]
+b7fde000-b7ffe000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7ffe000-b7fff000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7fff000-b8000000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bffdf000-c0000000 rw-p 00000000 00:00 0          [stack]
+Now the addresses are not getting randomized
+
+6.) Verify it for other programs
+-> Run 1
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ cat
+Terminal 2
+kan1shka9@dev:~$ ps -aux | grep cat
+kan1shk+  2053  0.0  0.5 134276 24576 ?        Sl   06:14   0:00 /usr/lib/i386-linux-gnu/indicator-keyboard-service --use-gtk
+kan1shk+  2060  0.0  0.1  45988  6812 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-messages/indicator-messages-service
+kan1shk+  2062  0.0  0.1  37884  6900 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-bluetooth/indicator-bluetooth-service
+kan1shk+  2065  0.0  0.1  37868  7144 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-power/indicator-power-service
+kan1shk+  2068  0.0  0.3  99732 12792 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-datetime/indicator-datetime-service
+kan1shk+  2071  0.0  0.2 117572 10176 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-sound/indicator-sound-service
+kan1shk+  2075  0.0  0.4  56772 19052 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-printers/indicator-printers-service
+kan1shk+  2079  0.0  0.1  62736  7476 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-session/indicator-session-service
+kan1shk+  2091  0.0  0.1  38384  7680 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-application/indicator-application-service
+kan1shk+  2424  0.0  0.3  44268 16524 ?        Sl   06:14   0:00 /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
+kan1shk+  2863  0.0  0.4  82376 17324 ?        Sl   06:14   0:00 telepathy-indicator
+kan1shk+  2924  0.0  0.0   4256   552 ?        S    06:14   0:00 /bin/cat
+kan1shk+  4663  0.0  0.0   4256   592 pts/6    S+   08:03   0:00 cat
+kan1shk+  4666  0.0  0.0   4692  2080 pts/16   S+   08:03   0:00 grep --color=auto cat
+kan1shka9@dev:~$ cat /proc/4663/maps 
+08048000-08053000 r-xp 00000000 08:01 262167     /bin/cat
+08053000-08054000 r--p 0000a000 08:01 262167     /bin/cat
+08054000-08055000 rw-p 0000b000 08:01 262167     /bin/cat
+08055000-08076000 rw-p 00000000 00:00 0          [heap]
+b7c13000-b7e13000 r--p 00000000 08:01 533457     /usr/lib/locale/locale-archive
+b7e13000-b7e14000 rw-p 00000000 00:00 0 
+b7e14000-b7fbd000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbd000-b7fbf000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbf000-b7fc0000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fc0000-b7fc3000 rw-p 00000000 00:00 0 
+b7fd8000-b7fd9000 r--p 00850000 08:01 533457     /usr/lib/locale/locale-archive
+b7fd9000-b7fdb000 rw-p 00000000 00:00 0 
+b7fdb000-b7fdc000 r-xp 00000000 00:00 0          [vdso]
+b7fdc000-b7fde000 r--p 00000000 00:00 0          [vvar]
+b7fde000-b7ffe000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7ffe000-b7fff000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7fff000-b8000000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bffdf000-c0000000 rw-p 00000000 00:00 0          [stack]
+-> Run 1
+Terminal 1
+kan1shka9@dev:~/Desktop/PAL/2$ cat
+Terminal 2
+kan1shka9@dev:~$ ps -aux | grep cat
+kan1shk+  2053  0.0  0.5 134276 24576 ?        Sl   06:14   0:00 /usr/lib/i386-linux-gnu/indicator-keyboard-service --use-gtk
+kan1shk+  2060  0.0  0.1  45988  6812 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-messages/indicator-messages-service
+kan1shk+  2062  0.0  0.1  37884  6900 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-bluetooth/indicator-bluetooth-service
+kan1shk+  2065  0.0  0.1  37868  7144 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-power/indicator-power-service
+kan1shk+  2068  0.0  0.3  99732 12792 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-datetime/indicator-datetime-service
+kan1shk+  2071  0.0  0.2 117572 10176 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-sound/indicator-sound-service
+kan1shk+  2075  0.0  0.4  56772 19052 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-printers/indicator-printers-service
+kan1shk+  2079  0.0  0.1  62736  7476 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-session/indicator-session-service
+kan1shk+  2091  0.0  0.1  38384  7680 ?        Ssl  06:14   0:00 /usr/lib/i386-linux-gnu/indicator-application/indicator-application-service
+kan1shk+  2424  0.0  0.3  44268 16524 ?        Sl   06:14   0:00 /usr/lib/policykit-1-gnome/polkit-gnome-authentication-agent-1
+kan1shk+  2863  0.0  0.4  82376 17324 ?        Sl   06:14   0:00 telepathy-indicator
+kan1shk+  2924  0.0  0.0   4256   552 ?        S    06:14   0:00 /bin/cat
+kan1shk+  4675  0.0  0.0   4256   592 pts/6    S+   08:04   0:00 cat
+kan1shk+  4678  0.0  0.0   4692  2080 pts/16   S+   08:05   0:00 grep --color=auto cat
+kan1shka9@dev:~$ cat /proc/4675/maps 
+08048000-08053000 r-xp 00000000 08:01 262167     /bin/cat
+08053000-08054000 r--p 0000a000 08:01 262167     /bin/cat
+08054000-08055000 rw-p 0000b000 08:01 262167     /bin/cat
+08055000-08076000 rw-p 00000000 00:00 0          [heap]
+b7c13000-b7e13000 r--p 00000000 08:01 533457     /usr/lib/locale/locale-archive
+b7e13000-b7e14000 rw-p 00000000 00:00 0 
+b7e14000-b7fbd000 r-xp 00000000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbd000-b7fbf000 r--p 001a9000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fbf000-b7fc0000 rw-p 001ab000 08:01 1967097    /lib/i386-linux-gnu/libc-2.19.so
+b7fc0000-b7fc3000 rw-p 00000000 00:00 0 
+b7fd8000-b7fd9000 r--p 00850000 08:01 533457     /usr/lib/locale/locale-archive
+b7fd9000-b7fdb000 rw-p 00000000 00:00 0 
+b7fdb000-b7fdc000 r-xp 00000000 00:00 0          [vdso]
+b7fdc000-b7fde000 r--p 00000000 00:00 0          [vvar]
+b7fde000-b7ffe000 r-xp 00000000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7ffe000-b7fff000 r--p 0001f000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+b7fff000-b8000000 rw-p 00020000 08:01 1967073    /lib/i386-linux-gnu/ld-2.19.so
+bffdf000-c0000000 rw-p 00000000 00:00 0          [stack]

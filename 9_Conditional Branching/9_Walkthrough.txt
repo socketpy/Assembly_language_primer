@@ -1,0 +1,604 @@
+Assembly Primer for Hackers Part 9 Conditional Branching
+
+1.) Program listing for 'jz' condition failing
+kan1shka9@dev:~/Desktop/PAL/8$ cat -n ConditionalBranching.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!\n"
+     5
+     6          ZeroFlagSet:
+     7                  .asciz  "Zero Flag was Set!"
+     8
+     9          ZeroFlagNotSet:
+    10                  .asciz  "Zero Flag Not Set!"
+    11
+    12
+    13  .text
+    14
+    15          .globl _start
+    16
+    17          _start:
+    18
+    19                  nop
+    20                  movl $10, %eax
+    21                  jz FlagSetPrint
+    22
+    23          FlagNotSetPrint:
+    24                  movl $4, %eax
+    25                  movl $1, %ebx
+    26                  leal ZeroFlagNotSet, %ecx
+    27                  movl $19, %edx
+    28                  int $0x80
+    29                  jmp ExitCall
+    30
+    31
+    32
+    33          FlagSetPrint:
+    34                  movl $4, %eax
+    35                  movl $1, %ebx
+    36                  leal ZeroFlagSet, %ecx
+    37                  movl $19, %edx
+    38                  int $0x80
+    39                  jmp ExitCall
+    40
+    41
+    42          ExitCall:
+    43                  movl $1, %eax
+    44                  movl $0, %ebx
+    45                  int $0x80
+    46
+    47          PrintHelloWorld:
+    48                  movl $10, %ecx
+    49                  PrintTenTimes:
+    50                          pushl %ecx
+    51                          movl $4, %eax
+    52                          movl $1, %ebx
+    53                          leal HelloWorld, %ecx
+    54                          movl $14, %edx
+    55                          int $0x80
+    56                          popl %ecx
+    57                  loop PrintTenTimes
+    58                  jmp ExitCall
+    59
+kan1shka9@dev:~/Desktop/PAL/8$
+
+2.) Assembly and link the program
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ as -gstabs -o ConditionalBranching.o ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ld -o ConditionalBranching ConditionalBranching.o
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching  ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ./ConditionalBranching
+Zero Flag Not Set!kan1shka9@dev:~/Desktop/PAL/8$
+
+3.) Load the program in GDB
+kan1shka9@dev:~/Desktop/PAL/8$ gdb ./ConditionalBranching
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./ConditionalBranching...done.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!\n"
+5
+6               ZeroFlagSet:
+7                       .asciz  "Zero Flag was Set!"
+8
+9               ZeroFlagNotSet:
+10                      .asciz  "Zero Flag Not Set!"
+(gdb)
+11
+12
+13      .text
+14
+15              .globl _start
+16
+17              _start:
+18
+19                      nop
+20                      movl $10, %eax
+(gdb)
+21                      jz FlagSetPrint
+22
+23              FlagNotSetPrint:
+24                      movl $4, %eax
+25                      movl $1, %ebx
+26                      leal ZeroFlagNotSet, %ecx
+27                      movl $19, %edx
+28                      int $0x80
+29                      jmp ExitCall
+30
+(gdb) break 20
+Breakpoint 1 at 0x8048075: file ConditionalBranching.s, line 20.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/8/ConditionalBranching
+
+Breakpoint 1, _start () at ConditionalBranching.s:20
+20                      movl $10, %eax
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x8048075        0x8048075 <_start+1>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+21                      jz FlagSetPrint
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807a        0x804807a <_start+6>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+24                      movl $4, %eax
+(gdb) list 24
+19                      nop
+20                      movl $10, %eax
+21                      jz FlagSetPrint
+22
+23              FlagNotSetPrint:
+24                      movl $4, %eax
+25                      movl $1, %ebx
+26                      leal ZeroFlagNotSet, %ecx
+27                      movl $19, %edx
+28                      int $0x80
+(gdb) c
+Continuing.
+Zero Flag Not Set![Inferior 1 (process 4381) exited normally]
+(gdb) quit
+kan1shka9@dev:~/Desktop/PAL/8$
+
+4.) Program listing for 'jz' condition succeeding
+kan1shka9@dev:~/Desktop/PAL/8$ cat -n ConditionalBranching.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!\n"
+     5
+     6          ZeroFlagSet:
+     7                  .asciz  "Zero Flag was Set!"
+     8
+     9          ZeroFlagNotSet:
+    10                  .asciz  "Zero Flag Not Set!"
+    11
+    12
+    13  .text
+    14
+    15          .globl _start
+    16
+    17          _start:
+    18
+    19                  nop
+    20                  movl $10, %eax
+    21                  xorl %eax, %eax
+    22                  jz FlagSetPrint
+    23
+    24          FlagNotSetPrint:
+    25                  movl $4, %eax
+    26                  movl $1, %ebx
+    27                  leal ZeroFlagNotSet, %ecx
+    28                  movl $19, %edx
+    29                  int $0x80
+    30                  jmp ExitCall
+    31
+    32
+    33
+    34          FlagSetPrint:
+    35                  movl $4, %eax
+    36                  movl $1, %ebx
+    37                  leal ZeroFlagSet, %ecx
+    38                  movl $19, %edx
+    39                  int $0x80
+    40                  jmp ExitCall
+    41
+    42
+    43          ExitCall:
+    44                  movl $1, %eax
+    45                  movl $0, %ebx
+    46                  int $0x80
+    47
+    48          PrintHelloWorld:
+    49                  movl $10, %ecx
+    50                  PrintTenTimes:
+    51                          pushl %ecx
+    52                          movl $4, %eax
+    53                          movl $1, %ebx
+    54                          leal HelloWorld, %ecx
+    55                          movl $14, %edx
+    56                          int $0x80
+    57                          popl %ecx
+    58                  loop PrintTenTimes
+    59                  jmp ExitCall
+    60
+kan1shka9@dev:~/Desktop/PAL/8$
+
+5.) Assembly and link the program
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ as -gstabs -o ConditionalBranching.o ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ld -o ConditionalBranching ConditionalBranching.o
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching  ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ./ConditionalBranching
+Zero Flag was Set!kan1shka9@dev:~/Desktop/PAL/8$
+
+6.) Load the program in GDB
+kan1shka9@dev:~/Desktop/PAL/8$ gdb ./ConditionalBranching
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./ConditionalBranching...done.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!\n"
+5
+6               ZeroFlagSet:
+7                       .asciz  "Zero Flag was Set!"
+8
+9               ZeroFlagNotSet:
+10                      .asciz  "Zero Flag Not Set!"
+(gdb)
+11
+12
+13      .text
+14
+15              .globl _start
+16
+17              _start:
+18
+19                      nop
+20                      movl $10, %eax
+(gdb)
+21                      xorl %eax, %eax
+22                      jz FlagSetPrint
+23
+24              FlagNotSetPrint:
+25                      movl $4, %eax
+26                      movl $1, %ebx
+27                      leal ZeroFlagNotSet, %ecx
+28                      movl $19, %edx
+29                      int $0x80
+30                      jmp ExitCall
+(gdb)
+31
+32
+33
+34              FlagSetPrint:
+35                      movl $4, %eax
+36                      movl $1, %ebx
+37                      leal ZeroFlagSet, %ecx
+38                      movl $19, %edx
+39                      int $0x80
+40                      jmp ExitCall
+(gdb) break 20
+Breakpoint 1 at 0x8048075: file ConditionalBranching.s, line 20.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/8/ConditionalBranching
+
+Breakpoint 1, _start () at ConditionalBranching.s:20
+20                      movl $10, %eax
+(gdb) s
+21                      xorl %eax, %eax
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807a        0x804807a <_start+6>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+22                      jz FlagSetPrint
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807c        0x804807c <_start+8>
+eflags         0x246    [ PF ZF IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+35                      movl $4, %eax
+(gdb) list 35
+30                      jmp ExitCall
+31
+32
+33
+34              FlagSetPrint:
+35                      movl $4, %eax
+36                      movl $1, %ebx
+37                      leal ZeroFlagSet, %ecx
+38                      movl $19, %edx
+39                      int $0x80
+(gdb) c
+Continuing.
+Zero Flag was Set![Inferior 1 (process 4452) exited normally]
+(gdb)
+
+7.) Program listing for Loop in conjunction with JZ
+kan1shka9@dev:~/Desktop/PAL/8$ cat -n ConditionalBranching.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!\n"
+     5
+     6          ZeroFlagSet:
+     7                  .asciz  "Zero Flag was Set!"
+     8
+     9          ZeroFlagNotSet:
+    10                  .asciz  "Zero Flag Not Set!"
+    11
+    12
+    13  .text
+    14
+    15          .globl _start
+    16
+    17          _start:
+    18
+    19                  nop
+    20                  movl $10, %eax
+    21                  xorl %eax, %eax
+    22                  jz PrintHelloWorld
+    23
+    24          FlagNotSetPrint:
+    25                  movl $4, %eax
+    26                  movl $1, %ebx
+    27                  leal ZeroFlagNotSet, %ecx
+    28                  movl $19, %edx
+    29                  int $0x80
+    30                  jmp ExitCall
+    31
+    32
+    33
+    34          FlagSetPrint:
+    35                  movl $4, %eax
+    36                  movl $1, %ebx
+    37                  leal ZeroFlagSet, %ecx
+    38                  movl $19, %edx
+    39                  int $0x80
+    40                  jmp ExitCall
+    41
+    42
+    43          ExitCall:
+    44                  movl $1, %eax
+    45                  movl $0, %ebx
+    46                  int $0x80
+    47
+    48          PrintHelloWorld:
+    49                  movl $10, %ecx
+    50                  PrintTenTimes:
+    51                          pushl %ecx
+    52                          movl $4, %eax
+    53                          movl $1, %ebx
+    54                          leal HelloWorld, %ecx
+    55                          movl $14, %edx
+    56                          int $0x80
+    57                          popl %ecx
+    58                  loop PrintTenTimes
+    59                  jmp ExitCall
+
+8.) Assembly and link the program
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ as -gstabs -o ConditionalBranching.o ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ld -o ConditionalBranching ConditionalBranching.o
+kan1shka9@dev:~/Desktop/PAL/8$ ls
+ConditionalBranching  ConditionalBranching.o  ConditionalBranching.s
+kan1shka9@dev:~/Desktop/PAL/8$ ./ConditionalBranching
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+kan1shka9@dev:~/Desktop/PAL/8$
+
+9.) Run the program in GDB
+kan1shka9@dev:~/Desktop/PAL/8$ gdb ./ConditionalBranching
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./ConditionalBranching...done.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!\n"
+5
+6               ZeroFlagSet:
+7                       .asciz  "Zero Flag was Set!"
+8
+9               ZeroFlagNotSet:
+10                      .asciz  "Zero Flag Not Set!"
+(gdb)
+11
+12
+13      .text
+14
+15              .globl _start
+16
+17              _start:
+18
+19                      nop
+20                      movl $10, %eax
+(gdb)
+21                      xorl %eax, %eax
+22                      jz PrintHelloWorld
+23
+24              FlagNotSetPrint:
+25                      movl $4, %eax
+26                      movl $1, %ebx
+27                      leal ZeroFlagNotSet, %ecx
+28                      movl $19, %edx
+29                      int $0x80
+30                      jmp ExitCall
+(gdb)
+31
+32
+33
+34              FlagSetPrint:
+35                      movl $4, %eax
+36                      movl $1, %ebx
+37                      leal ZeroFlagSet, %ecx
+38                      movl $19, %edx
+39                      int $0x80
+40                      jmp ExitCall
+(gdb) break 21
+Breakpoint 1 at 0x804807a: file ConditionalBranching.s, line 21.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/8/ConditionalBranching
+
+Breakpoint 1, _start () at ConditionalBranching.s:21
+21                      xorl %eax, %eax
+(gdb) info registers
+eax            0xa      10
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807a        0x804807a <_start+6>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+22                      jz PrintHelloWorld
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff710       0xbffff710
+ebp            0x0      0x0
+esi            0x0      0
+edi            0x0      0
+eip            0x804807c        0x804807c <_start+8>
+eflags         0x246    [ PF ZF IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+49                      movl $10, %ecx
+(gdb) list 49
+44                      movl $1, %eax
+45                      movl $0, %ebx
+46                      int $0x80
+47
+48              PrintHelloWorld:
+49                      movl $10, %ecx
+50                      PrintTenTimes:
+51                              pushl %ecx
+52                              movl $4, %eax
+53                              movl $1, %ebx
+(gdb) c
+Continuing.
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+Hello World!
+[Inferior 1 (process 4568) exited normally]
+(gdb)

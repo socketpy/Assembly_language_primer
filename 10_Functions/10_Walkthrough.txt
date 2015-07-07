@@ -1,0 +1,234 @@
+Assembly Primer for Hackers Part 10 Functions
+
+1.) Program listing for Function.s -> Passing arguments using register
+kan1shka9@dev:~/Desktop/PAL/9$ cat -n Function.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!\n"
+     5
+     6          HelloFunction:
+     7                  .asciz "Hello Function!\n"
+     8
+     9  .text
+    10
+    11          .globl _start
+    12
+    13          .type MyFunction, @function
+    14
+    15          MyFunction:     # String pointer and len to be added by caller
+    16
+    17                          movl $4, %eax
+    18                          movl $1, %ebx
+    19                          int $0x80
+    20                          ret
+    21
+    22          _start :
+    23                  nop
+    24                  # Print the Hello World String
+    25
+    26                  leal HelloWorld, %ecx
+    27                  movl $14, %edx
+    28                  call MyFunction
+    29
+    30                  # Print Hello Function
+    31
+    32                  leal HelloFunction, %ecx
+    33                  movl $17, %edx
+    34                  call MyFunction
+    35
+    36                  # Exit Routine
+    37
+    38          ExitCall:
+    39                  movl $1, %eax
+    40                  movl $0, %ebx
+    41                  int $0x80
+    42
+    43
+kan1shka9@dev:~/Desktop/PAL/9$
+
+2.) Assemble and link the program
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function2.s  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ as -gstabs -o Function.o Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function2.s  Function.o  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ ld -o Function Function.o
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function  Function2.s  Function.o  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ ./Function
+Hello World!
+Hello Function!
+kan1shka9@dev:~/Desktop/PAL/9$
+
+3.) Program listing for Function.s -> Passing arguments using global memory locations
+kan1shka9@dev:~/Desktop/PAL/9$ cat -n Function2.s
+     1  .data
+     2
+     3          HelloWorld:
+     4                  .asciz "Hello World!\n"
+     5
+     6          HelloFunction:
+     7                  .asciz "Hello Function!\n"
+     8
+     9  .bss
+    10          .lcomm StringPointer, 4
+    11          .lcomm StringLength, 4
+    12
+    13  .text
+    14
+    15          .globl _start
+    16
+    17          .type MyFunction, @function
+    18
+    19          MyFunction:     # String pointer and len to be added by caller
+    20
+    21                          movl $4, %eax
+    22                          movl $1, %ebx
+    23                          movl StringPointer, %ecx
+    24                          movl StringLength, %edx
+    25                          int $0x80
+    26                          ret
+    27
+    28          _start :
+    29                  nop
+    30
+    31                  # Print the Hello World String
+    32                  movl $HelloWorld, StringPointer
+    33                  movl $14, StringLength
+    34                  call MyFunction
+    35
+    36                  # Print Hello Function
+    37                  movl $HelloFunction, StringPointer
+    38                  movl $17, StringLength
+    39                  call MyFunction
+    40
+    41                  # Exit Routine
+    42
+    43          ExitCall:
+    44                  movl $1, %eax
+    45                  movl $0, %ebx
+    46                  int $0x80
+    47
+    48
+kan1shka9@dev:~/Desktop/PAL/9$
+
+4.) Assemble and link the program
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function  Function2.s  Function.o  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ as -ggstabs Function2.s -o Function2.o
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function  Function2.o  Function2.s  Function.o  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ ld -o Function2 Function2.o
+kan1shka9@dev:~/Desktop/PAL/9$ ls
+Function  Function2  Function2.o  Function2.s  Function.o  Function.s
+kan1shka9@dev:~/Desktop/PAL/9$ ./Function2
+Hello World!
+Hello Function!
+kan1shka9@dev:~/Desktop/PAL/9$
+
+5.) Run the program in GDB
+kan1shka9@dev:~/Desktop/PAL/9$ gdb ./Function2
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./Function2...done.
+(gdb) l
+1       .data
+2
+3               HelloWorld:
+4                       .asciz "Hello World!\n"
+5
+6               HelloFunction:
+7                       .asciz "Hello Function!\n"
+8
+9       .bss
+10              .lcomm StringPointer, 4
+(gdb)
+11              .lcomm StringLength, 4
+12
+13      .text
+14
+15              .globl _start
+16
+17              .type MyFunction, @function
+18
+19              MyFunction:     # String pointer and len to be added by caller
+20
+(gdb)
+21                              movl $4, %eax
+22                              movl $1, %ebx
+23                              movl StringPointer, %ecx
+24                              movl StringLength, %edx
+25                              int $0x80
+26                              ret
+27
+28              _start :
+29                      nop
+30
+(gdb)
+31                      # Print the Hello World String
+32                      movl $HelloWorld, StringPointer
+33                      movl $14, StringLength
+34                      call MyFunction
+35
+36                      # Print Hello Function
+37                      movl $HelloFunction, StringPointer
+38                      movl $17, StringLength
+39                      call MyFunction
+40
+(gdb) b 32
+Breakpoint 1 at 0x804808e: file Function2.s, line 32.
+(gdb) run
+Starting program: /home/kan1shka9/Desktop/PAL/9/Function2
+
+Breakpoint 1, _start () at Function2.s:32
+32                      movl $HelloWorld, StringPointer
+(gdb) x/1xw &StringPointer
+0x80490ec <StringPointer>:      0x00000000
+(gdb) x/1xw &StringLength
+0x80490f0 <StringLength>:       0x00000000
+(gdb) print /x &HelloWorld
+$1 = 0x80490cc
+(gdb) s
+33                      movl $14, StringLength
+(gdb) x/1xw &StringPointer
+0x80490ec <StringPointer>:      0x080490cc
+(gdb) x/1xw &StringLength
+0x80490f0 <StringLength>:       0x00000000
+(gdb) s
+34                      call MyFunction
+(gdb) x/1xw &StringLength
+0x80490f0 <StringLength>:       0x0000000e
+(gdb) x/1dw &StringLength
+0x80490f0 <StringLength>:       14
+(gdb) disassemble MyFunction
+Dump of assembler code for function MyFunction:
+   0x08048074 <+0>:     mov    $0x4,%eax
+   0x08048079 <+5>:     mov    $0x1,%ebx
+   0x0804807e <+10>:    mov    0x80490ec,%ecx
+   0x08048084 <+16>:    mov    0x80490f0,%edx
+   0x0804808a <+22>:    int    $0x80
+   0x0804808c <+24>:    ret
+End of assembler dump.
+(gdb) s
+21                              movl $4, %eax
+(gdb) print /x $eip
+$2 = 0x8048074
+(gdb) c
+Continuing.
+Hello World!
+Hello Function!
+[Inferior 1 (process 4807) exited normally]
+(gdb)

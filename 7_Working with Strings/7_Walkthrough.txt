@@ -1,0 +1,356 @@
+Assembly Primer for Hackers Part 7 Working with Strings
+
+1.) Assemble and Link the program
+kan1shka9@dev:~/Desktop/PAL/6$ ls
+StringBasics.s
+kan1shka9@dev:~/Desktop/PAL/6$ as -gstabs StringBasics.s -o StringBasics.o
+kan1shka9@dev:~/Desktop/PAL/6$ ls
+StringBasics.o  StringBasics.s
+kan1shka9@dev:~/Desktop/PAL/6$ ld -o StringBasics StringBasics.o
+kan1shka9@dev:~/Desktop/PAL/6$ ls
+StringBasics  StringBasics.o  StringBasics.s
+kan1shka9@dev:~/Desktop/PAL/6$ ./StringBasics
+kan1shka9@dev:~/Desktop/PAL/6$
+
+2.) Load the program in GDB
+kan1shka9@dev:~/Desktop/PAL/6$ gdb ./StringBasics
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "i686-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./StringBasics...done.
+(gdb) l
+1       .data
+2               HelloWorldString:
+3                       .asciz "Hello World of Assembly!"
+4               H3110:
+5                       .asciz "H3110"
+6       .bss
+7
+8               .lcomm Destination, 100
+9               .lcomm DestinationUsingRep, 100
+10              .lcomm DestinationUsingStos, 100
+(gdb)
+11
+12      .text
+13
+14              .globl _start
+15
+16              _start:
+17                      nop
+18                      # 1. Simple copying using movsb, movsw, movsl
+19
+20                      movl $HelloWorldString, %esi
+(gdb)
+21                      movl $Destination, %edi
+22
+23                      movsb
+24                      movsw
+25                      movsl
+26
+27                      # 2. Setting / Clearing the DF flag
+28
+29                      std # set the DF flag
+30                      cld # clear the DF flag
+(gdb) b 20
+Breakpoint 1 at 0x8048075: file StringBasics.s, line 20.
+
+---> # 1. Simple copying using movsb, movsw, movsl
+(gdb) print /x &HelloWorldString
+$3 = 0x80490dc
+(gdb) print /x $esi
+$4 = 0x0
+(gdb) s
+21                      movl $Destination, %edi
+(gdb) print /x $esi
+$5 = 0x80490dc
+(gdb) s
+23                      movsb
+(gdb) print /x $edi
+$6 = 0x8049100
+(gdb) x/10cb &HelloWorldString
+0x80490dc:      72 'H'  101 'e' 108 'l' 108 'l' 111 'o' 32 ' '  87 'W'  111 'o'
+0x80490e4:      114 'r' 108 'l'
+(gdb) x/1s &HelloWorldString
+0x80490dc:      "Hello World of Assembly!"
+(gdb) x/1s &Destination
+0x8049100 <Destination>:        ""
+(gdb) s
+24                      movsw
+(gdb) x/1s &Destination
+0x8049100 <Destination>:        "H"
+(gdb) print /x $esi
+$7 = 0x80490dd
+(gdb) print /x $edi
+$8 = 0x8049101
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490dd        134516957
+edi            0x8049101        134516993
+eip            0x8048080        0x8048080 <_start+12>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+25                      movsl
+(gdb) x/1s &Destination
+0x8049100 <Destination>:        "Hel"
+(gdb) print /x $edi
+$9 = 0x8049103
+(gdb) s
+29                      std # set the DF flag
+(gdb) x/1s &Destination
+0x8049100 <Destination>:        "Hello W"
+(gdb) print /x $edi
+$10 = 0x8049107
+(gdb)
+
+---> # 2. Setting / Clearing the DF flag
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490e3        134516963
+edi            0x8049107        134516999
+eip            0x8048083        0x8048083 <_start+15>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+30                      cld # clear the DF flag
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490e3        134516963
+edi            0x8049107        134516999
+eip            0x8048084        0x8048084 <_start+16>
+eflags         0x602    [ IF DF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+34                      movl $HelloWorldString, %esi
+(gdb) info registers
+eax            0x0      0
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490e3        134516963
+edi            0x8049107        134516999
+eip            0x8048085        0x8048085 <_start+17>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+
+---> # 3. Using Rep
+(gdb) s
+35                      movl $DestinationUsingRep, %edi
+(gdb) s
+36                      movl $25, %ecx # set the string length in ECX
+(gdb) s
+37                      cld # clear the DF
+(gdb) s
+38                      rep movsb
+(gdb) x/1s &HelloWorldString
+0x80490dc:      "Hello World of Assembly!"
+(gdb) x/1s &DestinationUsingRep
+0x8049168 <DestinationUsingRep>:        ""
+(gdb) s
+39                      std
+(gdb) x/1s &HelloWorldString
+0x80490dc:      "Hello World of Assembly!"
+(gdb) x/1s &DestinationUsingRep
+0x8049168 <DestinationUsingRep>:        "Hello World of Assembly!"
+(gdb) s
+43                      cld
+
+---> # 4. Loading string from memory into EAX register
+(gdb) s
+44                      leal HelloWorldString, %esi
+(gdb) s
+45                      lodsb
+(gdb) print /x &HelloWorldString
+$11 = 0x80490dc
+(gdb) print /x $esi
+$12 = 0x80490dc
+(gdb) print $eax
+$13 = 0
+(gdb) s
+46                      movb $0, %al
+(gdb) print $eax
+$14 = 72
+(gdb) print /c $eax
+$16 = 72 'H'
+(gdb) s
+48                      dec %esi
+(gdb) s
+49                      lodsw
+(gdb) s
+50                      movw $0, %ax
+(gdb) print /c $eax
+$17 = 72 'H'
+(gdb) info registers
+eax            0x6548   25928
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490de        134516958
+edi            0x8049181        134517121
+eip            0x80480a5        0x80480a5 <_start+49>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+52                      subl $2, %esi # Make ESI point back to the original string
+(gdb) x/1s $esi
+0x80490de:      "llo World of Assembly!"
+(gdb) s
+53                      lodsl
+(gdb) s
+57                      leal DestinationUsingStos, %edi
+(gdb) print /x $eax
+$20 = 0x6c6c6548
+
+---> # 5. Storing strings from EAX to memory 
+(gdb) s
+58                      stosb
+(gdb) x/1s &DestinationUsingStos
+0x80491d0 <DestinationUsingStos>:       ""
+(gdb) s
+59                      stosw
+(gdb) x/1s &DestinationUsingStos
+0x80491d0 <DestinationUsingStos>:       "H"
+(gdb) s
+60                      stosl
+(gdb) x/1s &DestinationUsingStos
+0x80491d0 <DestinationUsingStos>:       "HHe"
+(gdb) s
+64                      cld
+(gdb) x/1s &DestinationUsingStos
+0x80491d0 <DestinationUsingStos>:       "HHeHell"
+
+---> # 6. Comparing Strings
+(gdb) s
+65                      leal HelloWorldString, %esi
+(gdb) s
+66                      leal H3110, %edi
+(gdb) s
+67                      cmpsb
+(gdb) info registers
+eax            0x6c6c6548       1819043144
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490dc        134516956
+edi            0x80490f5        134516981
+eip            0x80480c4        0x80480c4 <_start+80>
+eflags         0x202    [ IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+69                      dec %esi
+(gdb) info registers
+eax            0x6c6c6548       1819043144
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490dd        134516957
+edi            0x80490f6        134516982
+eip            0x80480c5        0x80480c5 <_start+81>
+eflags         0x246    [ PF ZF IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+70                      dec %edi
+(gdb) s
+71                      cmpsw
+(gdb) s
+73                      subl $2, %esi
+(gdb) info registers
+eax            0x6c6c6548       1819043144
+ecx            0x0      0
+edx            0x0      0
+ebx            0x0      0
+esp            0xbffff720       0xbffff720
+ebp            0x0      0x0
+esi            0x80490de        134516958
+edi            0x80490f7        134516983
+eip            0x80480c9        0x80480c9 <_start+85>
+eflags         0x206    [ PF IF ]
+cs             0x73     115
+ss             0x7b     123
+ds             0x7b     123
+es             0x7b     123
+fs             0x0      0
+gs             0x0      0
+(gdb) s
+74                      subl $2, %edi
+(gdb) s
+75                      cmpsl
+(gdb) s
+80                      movl $1, %eax
+(gdb) s
+81                      movl $10, %ebx
+(gdb) s
+82                      int $0x80
+(gdb) c
+Continuing.
+[Inferior 1 (process 3324) exited with code 012]
+(gdb)
